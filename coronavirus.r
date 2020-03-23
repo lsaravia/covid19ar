@@ -1,7 +1,7 @@
 # COVID-19
 #
 # Estimación de los parametros de una exponecial y el factor de crecimiento
-# También para los casos de contacto directo
+# También para los casos de cont  acto directo
 #
 # Fuente @msalnacion 
 #
@@ -79,7 +79,7 @@ cor1 <- cor %>% mutate(importados=casos-contactos) %>% gather(tipo,N,casos:conta
 
 ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=F) + scale_y_log10() + scale_color_viridis_d()
 
-ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() 
+ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
 
 mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=0.3,beta=0.4),data=.) )
 mod  %>% do(data.frame(
@@ -109,3 +109,7 @@ ggplot(cor1, aes(x = fecha, y = contactos) ) +
   geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= "blue") + 
   labs(title = bquote("Argentina casos ="* .(a)* e^(dias ~ .(b)))) + theme_bw() + annotate(geom="text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10()
 
+
+# # Modelo exponencial solo casos importados
+#
+#
