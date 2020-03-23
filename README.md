@@ -1,6 +1,6 @@
 # Coronavirus - COVID19 - Argentina
 
-- Datos de ministerio de salud <https://www.argentina.gob.ar/coronavirus/informe-diario> en archivo *coronavirus_ar.csc* 
+- Datos de ministerio de salud <https://www.argentina.gob.ar/coronavirus/informe-diario> en archivo *coronavirus_ar.csv* 
 
 	- Metadata: descripción de los campos
 
@@ -13,5 +13,5 @@
 		- comunitarios: casos referidos como en estudio epidemiológico o sospechoso de comunitarios, NO ACUMULADOS! 
 
 
-- Código R para estimación de crecimiento, por ahora exponencial.
+- Código R para estimación de crecimiento, por ahora exponencial, *coronavirus.r*.
 

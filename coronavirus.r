@@ -18,11 +18,6 @@ cor <- cor %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha)))
 
 require(ggplot2)
 
-ggplot(cor,aes(x=dias,y=casos)) + geom_point() + theme_bw() + stat_smooth(method=lm)
-
-ggplot(cor,aes(x=dias,y=casos)) + geom_point() + theme_bw() + stat_smooth() + scale_y_log10()
-
-
 # g0 <- ggplot(cor,aes(x=dias,y=casos)) + geom_point() + theme_bw() + geom_smooth(method="glm",family=gaussian(link="log")) 
 # g1 <- g0 + expand_limits(x=c(0,240))+
 #   geom_smooth(method="glm",family=gaussian(link="log"),
@@ -71,8 +66,8 @@ cor <- cor %>% mutate(delta=casos-lag(casos),deltaPrev=lag(delta),growthFactor= 
 
 ggplot(cor %>% filter(dias>3),aes(x=dias,y=growthFactor)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=FALSE) +   labs(title = bquote("Growth Factor=" ~ Delta* N[t] / Delta* N[t-1] ))  + theme_bw() + annotate(geom="text", x=5, y=8, label="Fuente @msalnacion\n by @larysar",color="red",size=2)
 
-
-# Contactos e Importados by group
+#
+# Contactos e Importados by group usando tidyverse
 #
 require(tidyr)
 cor1 <- cor %>% mutate(importados=casos-contactos) %>% gather(tipo,N,casos:contactos,importados) %>% filter(tipo %in% c("contactos","importados")) %>% mutate(N = ifelse(N==0,NA,N))
@@ -86,7 +81,18 @@ mod  %>% do(data.frame(
   var = names(coef(.$mod)),
   coef(summary(.$mod)))
 )
+newdat <- data.frame(dias = 0:26)
+library(tidyverse)  
+predexp <- cor1 %>%
+  group_by(tipo) %>%
+  nest %>%
+  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.3,beta=0.4),data=.))) %>%
+  mutate(pred = purrr::map(.x = mod, ~ predict(., newdat))) %>% 
+  select(tipo,pred) %>% unnest %>% cbind(newdat = newdat) %>% mutate(fecha = min(cor1$fecha)+dias)
 
+
+ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
+ggsave("coronaArConVsImp2203.jpg")
 
 # Modelo exponencial para Contactos directos
 #
