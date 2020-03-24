@@ -67,16 +67,16 @@ cor <- cor %>% mutate(delta=casos-lag(casos),deltaPrev=lag(delta),growthFactor= 
 ggplot(cor %>% filter(dias>3),aes(x=dias,y=growthFactor)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=FALSE) +   labs(title = bquote("Growth Factor=" ~ Delta* N[t] / Delta* N[t-1] ))  + theme_bw() + annotate(geom="text", x=5, y=8, label="Fuente @msalnacion\n by @larysar",color="red",size=2)
 
 #
-# Contactos e Importados by group usando tidyverse
+# Contactos e Importados Comunitarios by group usando tidyverse
 #
 require(tidyr)
-cor1 <- cor %>% mutate(importados=casos-contactos) %>% gather(tipo,N,casos:contactos,importados) %>% filter(tipo %in% c("contactos","importados")) %>% mutate(N = ifelse(N==0,NA,N))
+cor1 <- cor %>% mutate(comunitarios=cumsum(comunitarios), importados=casos-contactos-comunitarios) %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in% c("contactos","importados","comunitarios")) %>% mutate(N = ifelse(N==0,NA,N))
 
 ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=F) + scale_y_log10() + scale_color_viridis_d()
 
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
 
-mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=0.3,beta=0.4),data=.) )
+mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.5),data=.) )
 mod  %>% do(data.frame(
   var = names(coef(.$mod)),
   coef(summary(.$mod)))
@@ -86,36 +86,11 @@ library(tidyverse)
 predexp <- cor1 %>%
   group_by(tipo) %>%
   nest %>%
-  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.3,beta=0.4),data=.))) %>%
+  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.5),data=.))) %>%
   mutate(pred = purrr::map(.x = mod, ~ predict(., newdat))) %>% 
   select(tipo,pred) %>% unnest %>% cbind(newdat = newdat) %>% mutate(fecha = min(cor1$fecha)+dias)
 
 
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
-ggsave("coronaArConVsImp2203.jpg")
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg")
 
-# Modelo exponencial para Contactos directos
-#
-cor1 <- cor %>% filter(contactos>0) %>% mutate(dias=dias-7)
-expmdl <- lm(log(contactos)~ dias,data=cor1)
-linmdl <- lm(contactos~ dias,data=cor1) 
-AIC(linmdl,expmdl)
-summary(expmdl)
-model <- nls(contactos ~ alpha * exp(beta * dias) , data = cor1, start=list(alpha=0.3,beta=.5))
-a <- round(coef(model)[1],4)
-b <- round(coef(model)[2],4)
-summary(model)
-
-# Prediccion hasta el 31/03 
-#
-predexp <-data.frame(pred=predict(model,newdata=data.frame(dias=0:19))) %>% mutate(dias=0:19, fecha=min(cor1$fecha)+dias)
-ggplot(cor1, aes(x = fecha, y = contactos) ) +
-  geom_point() +
-  #  geom_ribbon( aes(ymin = lwr, ymax = upr), alpha = .15) +
-  geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= "blue") + 
-  labs(title = bquote("Argentina casos ="* .(a)* e^(dias ~ .(b)))) + theme_bw() + annotate(geom="text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10()
-
-
-# # Modelo exponencial solo casos importados
-#
-#
