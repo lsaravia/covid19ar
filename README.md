@@ -16,4 +16,6 @@
 - [coronavirus.r](coronavirus.r) Código R para estimación de crecimiento, por ahora exponencial. El código usa un ajuste por cuadrados mínimos no-lineales y las funciones del paquete tidyverse para hacer ajustes por tipo.   
 
 
+![](coronaArComparacionLog.jpg)
+
 ![](coronaArComparacion.jpg)

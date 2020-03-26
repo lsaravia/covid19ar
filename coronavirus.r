@@ -76,21 +76,42 @@ ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smoo
 
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
 
-mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.5),data=.) )
+mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.6),data=.) )
 mod  %>% do(data.frame(
-  var = names(coef(.$mod)),
-  coef(summary(.$mod)))
+  var = names(coef(.$mod)),tau = log(2)/coef(.$mod)[2],
+  coef(summary(.$mod))) 
 )
 newdat <- data.frame(dias = 0:26)
 library(tidyverse)  
 predexp <- cor1 %>%
   group_by(tipo) %>%
   nest %>%
-  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.5),data=.))) %>%
+  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.6),data=.))) %>%
   mutate(pred = purrr::map(.x = mod, ~ predict(., newdat))) %>% 
   select(tipo,pred) %>% unnest %>% cbind(newdat = newdat) %>% mutate(fecha = min(cor1$fecha)+dias)
 
 
-ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
-ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg")
+ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg",width=6,height=6,units="in",dpi=600)
 
+ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionLog.jpg",width=6,height=6,units="in",dpi=600)
+
+#
+# Estimación de R0 
+#
+# Generation time from
+# https://github.com/midas-network/COVID-19/tree/master/parameter_estimates/2019_novel_coronavirus
+#
+install.packages("R0")
+require(R0)
+
+
+mGT<-generation.time("gamma", c(5.2, 1.5))
+eg <- est.R0.EG(cor$comunitarios,mGT,begin = 13,end=20)
+eg
+plotfit(eg)
+mGT<-generation.time("gamma", c(5.2, 1.5))
+ml <- est.R0.ML(cor$comunitarios,mGT,begin = 13,end=20)
+ml
+plotfit(ml)
