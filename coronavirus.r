@@ -43,24 +43,42 @@ model <- nls(casos ~ alpha * exp(beta * dias) , data = cor, start=list(alpha=0.6
 a <- round(coef(model)[1],2)
 b <- round(coef(model)[2],2)
 summary(model)
+# Tiempo de duplicacion
+#
+tau <-  round(log(2)/b,2)
 
 # Prediccion hasta 31/03
 #
 predexp <-data.frame(pred=predict(model,newdata=data.frame(dias=0:26))) %>% mutate(dias=0:26, fecha=min(cor$fecha)+dias)
 predexp
-#cor <-  bind_cols(cor, predexp)
+
+# Estimación de R0
+#
+#
+# Generation time from
+# https://github.com/midas-network/COVID-19/tree/master/parameter_estimates/2019_novel_coronavirus
+# 
+require(R0)
+mGT<-generation.time("gamma", c(5.2, 1.5))
+est.R0.EG(cor$casosdia,mGT,begin = 1,end=20)
+
 
 tl <- est.R0.ML(cor$casosdia,mGT,begin = 1,end=20)
 #plotfit(tl)
-tl$R
+r <- round(tl$R,2)
 r0 <- round(tl$conf.int,2)
+
 # Casos totales
 #
 ggplot(cor, aes(x = fecha, y = casos) ) +
   geom_point() +
 #  geom_ribbon( aes(ymin = lwr, ymax = upr), alpha = .15) +
   geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= "blue") + 
-  labs(title = bquote("Argentina casos ="* .(a)* e^(dias ~ .(b)))) + theme_bw() + annotate(geom="text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10() + annotate("text", x=ymd("20200327"), y=3,label=bquote(R0 == .(r0[1]) - .(r0[2])  ))
+  labs(title = bquote("Argentina casos ="* .(a)* e^(dias ~ .(b)))) + theme_bw() + 
+  annotate("text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10() + 
+  annotate("text", x=ymd("20200325"), y=3,label=paste("R0 =", r, "[", r0[1], ",", r0[2],"]"),size=3) + 
+  annotate("text", x=ymd("20200325"), y=2,label=paste("Tiempo de duplicación =", tau),size=3)
+
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArTotalesLog.jpg",width=6,height=6,units="in",dpi=600)
 
 # Growth Factor para casos totales
