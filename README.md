@@ -20,6 +20,8 @@
 
 ![](coronaArTotalesLog.jpg)
 
+![](coronaArNuevosVsTotales.jpg)
+
 ![](coronaArComparacionLog.jpg)
 
 ![](coronaArComparacion.jpg)

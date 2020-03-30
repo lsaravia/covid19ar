@@ -9,7 +9,7 @@
 require(dplyr)
 require(readr)
 require(lubridate)
-cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv")
+cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv") %>% dplyr::select(fecha:comunitarios)
 cor <- cor %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
 #
 # OJO, los casos en estudio = ? comunitarios no estan acumulados
@@ -21,10 +21,6 @@ require(ggplot2)
 # g1 <- g0 + expand_limits(x=c(0,240))+
 #   geom_smooth(method="glm",family=gaussian(link="log"),
 #               fullrange=TRUE)
-# 1. linear growth: RICE(t) = R0 + r • TIME
-# 2. exponential growth: RICE(t) = R0 • e^-(r • TIME)
-# 3. restricted growth: RICE(t) = MAX - (MAX - R0) • e^-(r • MAX • TIME)
-# 4. logistic growth: RICE(t) = (MAX • R0) / ( R0 + (MAX - R0) • e^-(r • MAX • TIME) )
 
 # Comparación de distintos modelos utilizando el criterio de Akaike (lineal y exponencial nomas)
 #
@@ -37,6 +33,9 @@ AIC(linmdl,expmdl)
 # Ajuste no-lineal del los parametros del modelo exponencial
 #
 model <- nls(casos ~ alpha * exp(beta * dias) , data = cor, start=list(alpha=0.6,beta=0.4))
+
+#p <- getInitial(casos ~ SSlogis(dias, Asym,xmid,scal), data = cor)
+#model1 <- nls(casos ~ SSlogis(dias, p[1],p[2],p[3]), data = cor)
 
 # Extraigo los coeficientes para ponerlos en el gráfico
 #
@@ -62,7 +61,6 @@ require(R0)
 mGT<-generation.time("gamma", c(5.2, 1.5))
 est.R0.EG(cor$casosdia,mGT,begin = 1,end=20)
 
-
 tl <- est.R0.ML(cor$casosdia,mGT,begin = 1,end=20)
 #plotfit(tl)
 r <- round(tl$R,2)
@@ -87,11 +85,27 @@ cor <- cor %>% mutate(delta=casos-lag(casos),deltaPrev=lag(delta),growthFactor= 
 
 ggplot(cor %>% filter(dias>3),aes(x=dias,y=growthFactor)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=FALSE) +   labs(title = bquote("Growth Factor=" ~ Delta* N[t] / Delta* N[t-1] ))  + theme_bw() + annotate(geom="text", x=5, y=8, label="Fuente @msalnacion\n by @larysar",color="red",size=2)
 
+# Nuevos casos vs casos totales en log
+#
+
+predexp <- predexp %>% mutate( preddia = pred - lag(pred))
+
+ggplot(cor, aes(x = casos, y = casosdia) ) +
+  geom_point() + geom_line() + scale_x_log10() + scale_y_log10() + theme_bw() + ylab("Nuevos casos") + xlab("Casos totales")+
+  geom_line(data=predexp, aes(x=pred, y = preddia), size = .5, color= "blue") + coord_cartesian(xlim=c(9,max(predexp$pred)))+ 
+  annotate(geom="text", x=1000, y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2)
+
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArNuevosVsTotales.jpg",width=6,height=6,units="in",dpi=600)
+
+#  geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= "blue") 
+  
+
+
 #
 # Contactos e Importados Comunitarios by group usando tidyverse
 #
 require(tidyr)
-cor1 <- cor %>% mutate(comunitarios=cumsum(comunitarios), importados=casos-contactos-comunitarios) %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in% c("contactos","importados","comunitarios")) %>% mutate(N = ifelse(N==0,NA,N))
+cor1 <- cor %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in% c("contactos","importados","comunitarios")) %>% mutate(N = ifelse(N==0,NA,N))
 
 ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=F) + scale_y_log10() + scale_color_viridis_d()
 
@@ -132,6 +146,6 @@ eg <- est.R0.EG(cor$comunitarios,mGT,begin = 13,end=max(cor$dias))
 eg
 plotfit(eg)
 mGT<-generation.time("gamma", c(5.2, 1.5))
-ml <- est.R0.ML(cor$comunitarios,mGT,begin = 13,max(cor$dias))
+ml <- est.R0.ML(cor$comunitarios,mGT,begin = 13,end=max(cor$dias))
 ml
 
