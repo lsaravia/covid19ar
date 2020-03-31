@@ -58,7 +58,7 @@ summary(model)
 #
 tau <-  round(log(2)/b,2)
 
-# Prediccion hasta 31/03
+# Prediccion hasta 12/04
 #
 ldia <- as.numeric(ymd("2020-04-12") - min(cor$fecha))
 predexp <-data.frame(pred=predict(model,newdata=data.frame(dias=0:ldia)),predlog = predict(model1,newdata=data.frame(dias=0:ldia))) %>% mutate(dias=0:ldia, fecha=min(cor$fecha)+dias)
