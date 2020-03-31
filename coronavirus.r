@@ -1,7 +1,7 @@
 # COVID-19
 #
-# Estimación de los parametros de una exponecial y el factor de crecimiento
-# También para los casos de cont  acto directo
+# Estimación de los parametros de una exponecial/ logistica,  el factor de crecimiento
+# También para los casos de contacto directo
 #
 # Fuente @msalnacion 
 #
@@ -10,7 +10,7 @@ require(dplyr)
 require(readr)
 require(lubridate)
 cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv") %>% dplyr::select(fecha:comunitarios)
-cor <- cor %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
+cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
 #
 # OJO, los casos en estudio = ? comunitarios no estan acumulados
 #
@@ -32,13 +32,25 @@ AIC(linmdl,expmdl)
 
 # Ajuste no-lineal del los parametros del modelo exponencial
 #
-model <- nls(casos ~ alpha * exp(beta * dias) , data = cor, start=list(alpha=0.6,beta=0.4))
+model <- nls(casos ~ alpha * exp(beta * dias) , data =cor  , start=list(alpha=0.6,beta=0.4))
+# Ajuste del modelo logístico
+require(drc)
+#
+# f(x) = d / (1+exp(b(x - e)))
+#
+model1 <- drm(casos ~ dias, fct=L.3() , data = cor)
+summary(model1)
 
-#p <- getInitial(casos ~ SSlogis(dias, Asym,xmid,scal), data = cor)
-#model1 <- nls(casos ~ SSlogis(dias, p[1],p[2],p[3]), data = cor)
+AIC(model,model1)
+
+# Despues del dia 21 El ajuste del modelo logístico es mejor 
+# En el dia 21 todavia ajustaba mejor el modelo exponencial
+#
 
 # Extraigo los coeficientes para ponerlos en el gráfico
 #
+model <- nls(casos ~ alpha * exp(beta * dias) , data = filter(cor, dias<22)  , start=list(alpha=0.6,beta=0.4))
+
 a <- round(coef(model)[1],2)
 b <- round(coef(model)[2],2)
 summary(model)
@@ -48,9 +60,9 @@ tau <-  round(log(2)/b,2)
 
 # Prediccion hasta 31/03
 #
-predexp <-data.frame(pred=predict(model,newdata=data.frame(dias=0:26))) %>% mutate(dias=0:26, fecha=min(cor$fecha)+dias)
+ldia <- as.numeric(ymd("2020-04-12") - min(cor$fecha))
+predexp <-data.frame(pred=predict(model,newdata=data.frame(dias=0:ldia)),predlog = predict(model1,newdata=data.frame(dias=0:ldia))) %>% mutate(dias=0:ldia, fecha=min(cor$fecha)+dias)
 predexp
-
 # Estimación de R0
 #
 #
@@ -59,20 +71,21 @@ predexp
 # 
 require(R0)
 mGT<-generation.time("gamma", c(5.2, 1.5))
-est.R0.EG(cor$casosdia,mGT,begin = 1,end=20)
+est.R0.EG(cor$casosdia,mGT,begin = 1,end=22)
 
-tl <- est.R0.ML(cor$casosdia,mGT,begin = 1,end=20)
+tl <- est.R0.ML(cor$casosdia,mGT,begin = 1,end=22)
 #plotfit(tl)
 r <- round(tl$R,2)
 r0 <- round(tl$conf.int,2)
 
+col <- viridisLite::viridis(2)
 # Casos totales
 #
 ggplot(cor, aes(x = fecha, y = casos) ) +
   geom_point() +
 #  geom_ribbon( aes(ymin = lwr, ymax = upr), alpha = .15) +
-  geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= "blue") + 
-  labs(title = bquote("Argentina casos ="* .(a)* e^(dias ~ .(b)))) + theme_bw() + 
+  geom_line(data=predexp, aes(x=fecha,y = pred), size = .5, color= col[1]) + 
+  geom_line(data=predexp, aes(x=fecha,y = predlog), size = .5, color= col[2]) +  theme_bw() + 
   annotate("text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10() + 
   annotate("text", x=ymd("20200325"), y=3,label=paste("R0 =", r, "[", r0[1], ",", r0[2],"]"),size=3) + 
   annotate("text", x=ymd("20200325"), y=2,label=paste("Tiempo de duplicación =", tau),size=3)
@@ -132,20 +145,34 @@ ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg",w
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionLog.jpg",width=6,height=6,units="in",dpi=600)
 
-#
-# Estimación de R0 
-#
-# Generation time from
-# https://github.com/midas-network/COVID-19/tree/master/parameter_estimates/2019_novel_coronavirus
-#
-require(R0)
 
-mGT<-generation.time("gamma", c(5.2, 1.5))
 
-eg <- est.R0.EG(cor$comunitarios,mGT,begin = 13,end=max(cor$dias))
-eg
-plotfit(eg)
-mGT<-generation.time("gamma", c(5.2, 1.5))
-ml <- est.R0.ML(cor$comunitarios,mGT,begin = 13,end=max(cor$dias))
-ml
+# 
+# Comparacion Casos GLobales Tasa de crecimiento vs Casos Totales 
+#
+# Fuente:  Johns Hopkins University Center for Systems Science and Engineering.
+#          https://systems.jhu.edu/research/public-health/ncov/
+#
+#
 
+corg <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") 
+
+corg <- corg %>% rename(country="Country/Region",province="Province/State")  %>% filter( country %in% c("US","Italy","Germany", "Korea, South"))
+require(tidyr)
+
+# Umbral de casos a partir de los cuales se calcula la curva
+#
+umbral <- 50
+
+cor1 <- corg %>% gather(date,N,5:ncol(corg) ) %>% arrange(country) %>% mutate(casosdia = N - lag(N)) %>%  filter(N>umbral, casosdia>0 ) %>% group_by(country) %>% mutate(fecha=mdy(date), dias =as.numeric( fecha - min(fecha))) 
+
+# Para argentina usa los datos de @minsal 
+#
+cor1 <- bind_rows( cor1, cor %>% filter(casos>umbral) %>%dplyr::select(casos,casosdia,fecha) %>% mutate(country="Argentina",dias =as.numeric( fecha - min(fecha))) %>% rename(N=casos))
+
+require(ggplot2)
+
+ggplot(cor1, aes(x = N, y = casosdia, colour=country) ) + scale_y_log10() +  scale_x_log10() + 
+  geom_point() +  theme_bw() +  guides(fill=FALSE) + scale_color_viridis_d() + geom_line() + xlab("Casos Totales") + ylab( "Casos por Día") + 
+  annotate("text",x=1850, y=1, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) 
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaGlobalNuevosVsTotales.jpg",width=6,height=6,units="in",dpi=600)

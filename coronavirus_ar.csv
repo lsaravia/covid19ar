@@ -23,3 +23,4 @@ fecha,casos,casosdia,fallecido,CABA,CABAdia,recuperados,importados, contactos,co
 2020-03-27,690,101,17,235,43,72,386,167,137,-58,2258,1870,"*ERROR Los casos comunitarios no coinciden con la suma de reportados hasta ahora, hay incidencia negativa, ERROR!"
 2020-03-28,745,55,19,253,18,80,408,185,152,15,2817,3215,
 2020-03-29,820,75,20,258,13,91,442,207,171,19,3106,,
+2020-03-30,966,146,24,292,34,228,489,,,,,,*NO se reportaron la cantidad de casos por contactos estrechos por lo que no se puede calcular la cantidad de casos comunitarios

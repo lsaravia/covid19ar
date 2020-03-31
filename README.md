@@ -9,19 +9,23 @@
 		- casosdia: casos totales en argentina por día
 		- fallecido: muertes acumuladas
 		- CABA: casos en CABA acumulados
+		- CABAdia: casos en CABA acumulados
 		- recuperados: casos recuperados solo informados algunos dias, no siempre están en los reportes por lo son tomados de diversas fuentes.
 		- contactos: casos por transmisión de contactos estrechos de casos importados, acumulados
-		- comunitarios: casos referidos como en estudio epidemiológico o sospechoso de comunitarios, NO ACUMULADOS! 
+		- comunitarios: casos referidos como en estudio epidemiológico o sospechoso de comunitarios, acumulados 
+		- comunitariosdia: idem anterior por día NO ACUMULADOS
 		- testeados: casos negativos por laboratorio
 		- descartados: casos descartados por epidemiología
+		- Observaciones
 
 
 - [coronavirus.r](coronavirus.r) Código R para estimación de crecimiento, por ahora exponencial. El código usa un ajuste por cuadrados mínimos no-lineales y las funciones del paquete tidyverse para hacer ajustes por tipo.   
 
 ![](coronaArTotalesLog.jpg)
 
+
 ![](coronaArNuevosVsTotales.jpg)
 
-![](coronaArComparacionLog.jpg)
 
-![](coronaArComparacion.jpg)
+![](coronaGlobalNuevosVsTotales.jpg)
+
