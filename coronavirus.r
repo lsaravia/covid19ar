@@ -162,7 +162,7 @@ require(tidyr)
 
 # Umbral de casos a partir de los cuales se calcula la curva
 #
-umbral <- 50
+umbral <- 100
 
 cor1 <- corg %>% gather(date,N,5:ncol(corg) ) %>% arrange(country) %>% mutate(casosdia = N - lag(N)) %>%  filter(N>umbral, casosdia>0 ) %>% group_by(country) %>% mutate(fecha=mdy(date), dias =as.numeric( fecha - min(fecha))) 
 
@@ -174,5 +174,5 @@ require(ggplot2)
 
 ggplot(cor1, aes(x = N, y = casosdia, colour=country) ) + scale_y_log10() +  scale_x_log10() + 
   geom_point() +  theme_bw() +  guides(fill=FALSE) + scale_color_viridis_d() + geom_line() + xlab("Casos Totales") + ylab( "Casos por Día") + 
-  annotate("text",x=1850, y=1, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) 
+  annotate("text",x=1850, y=10, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) 
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaGlobalNuevosVsTotales.jpg",width=6,height=6,units="in",dpi=600)

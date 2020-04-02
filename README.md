@@ -10,12 +10,12 @@
 		- fallecido: muertes acumuladas
 		- CABA: casos en CABA acumulados
 		- CABAdia: casos en CABA acumulados
-		- recuperados: casos recuperados solo informados algunos dias, no siempre están en los reportes por lo son tomados de diversas fuentes.
+		- recuperados: casos recuperados (dados de alta transitoria o permanente), inicialmente no siempre estaban en los reportes.
 		- contactos: casos por transmisión de contactos estrechos de casos importados, acumulados
 		- comunitarios: casos referidos como en estudio epidemiológico o sospechoso de comunitarios, acumulados 
 		- comunitariosdia: idem anterior por día NO ACUMULADOS
-		- testeados: casos negativos por laboratorio
-		- descartados: casos descartados por epidemiología
+		- testeados: total de casos testeados negativos por (laboratorio o epidemiologia)
+		- descartados: total de casos descartados 
 		- Observaciones
 
 

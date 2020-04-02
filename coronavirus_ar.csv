@@ -20,8 +20,9 @@ fecha,casos,casosdia,fallecido,CABA,CABAdia,recuperados,importados, contactos,co
 2020-03-24,385,84,6,133,30,63,238,74,73,25,,,
 2020-03-25,502,117,8,154,21,63,291,92,169,96,,,
 2020-03-26,589,87,12,184,30,75,348,116,195,26,1946,1570,
-2020-03-27,690,101,17,227,43,72,386,167,137,-58,2258,1870,"*ERROR Los casos comunitarios no coinciden con la suma de reportados hasta ahora, hay incidencia negativa, ERROR!"
+2020-03-27,690,101,17,227,43,72,386,167,137,-58,2258,1870,"*OJO La columna comunitarios son casos en estudio por eso supuestamente se pueden reclasificar y no son casos comunitarios confirmados, por eso dan incidencias negativas!"
 2020-03-28,745,55,19,253,18,80,408,185,152,15,2817,3215,
 2020-03-29,820,75,20,258,13,91,442,207,171,19,3106,,
-2020-03-30,966,146,24,292,34,228,489,276,201,30,,,"*NO se reportaron la cantidad de casos por contactos estrechos, casos comunitarios calculados con la mitad del dia posterior"
-2020-03-31,1054,88,27,311,19,240,529,295,230,29,3877,3877,
+2020-03-30,966,146,24,292,34,228,489,276,201,30,,,"*NO se reportaron la cantidad de casos por contactos estrechos, casos por contacto calculados con la mitad del dia posterior  = (contactos(t+1) - contactos(t-1))/2 y casos comunitarios por resta"
+2020-03-31,1054,88,27,311,19,240,529,295,230,29,4931,3877,
+2020-04-01,1133,79,32,321,10,248,580,349,204,-26,5730,4597,
