@@ -120,7 +120,8 @@ ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArNuevosVsTotales.jp
 require(tidyr)
 cor1 <- cor %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in% c("contactos","importados","comunitarios")) %>% mutate(N = ifelse(N==0,NA,N))
 
-ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm,se=F) + scale_y_log10() + scale_color_viridis_d()
+ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm, se=F) + scale_y_log10() + scale_color_viridis_d() + ylab("Casos")
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
 
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
 

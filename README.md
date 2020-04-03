@@ -12,10 +12,11 @@
 		- CABAdia: casos en CABA acumulados
 		- recuperados: casos recuperados (dados de alta transitoria o permanente), inicialmente no siempre estaban en los reportes.
 		- contactos: casos por transmisión de contactos estrechos de casos importados, acumulados
-		- comunitarios: casos referidos como en estudio epidemiológico o sospechoso de comunitarios, acumulados 
-		- comunitariosdia: idem anterior por día NO ACUMULADOS
+		- comunitarios: casos comunitarios 
+		- investigacion: casos en investigacion epidemiológica o sospechoso de comunitarios, acumulados 
+		- investigaciondia: idem anterior por día NO ACUMULADOS
 		- testeados: total de casos testeados negativos por (laboratorio o epidemiologia)
-		- descartados: total de casos descartados 
+		- descartados: total de casos descartados (casos totales + testeados)
 		- Observaciones
 
 
@@ -26,6 +27,7 @@
 
 ![](coronaArNuevosVsTotales.jpg)
 
+![](coronaArComparacionComunitarios.jpg)
 
 ![](coronaGlobalNuevosVsTotales.jpg)
 
