@@ -40,9 +40,8 @@ require(drc)
 #
 model1 <- drm(casos ~ dias, fct=L.3() , data = cor)
 summary(model1)
-
+capacidadcarga <- round(coef(model1)[2])
 AIC(model,model1)
-
 # Despues del dia 21 El ajuste del modelo logístico es mejor 
 # En el dia 21 todavia ajustaba mejor el modelo exponencial
 #
@@ -88,7 +87,7 @@ ggplot(cor, aes(x = fecha, y = casos) ) +
   geom_line(data=predexp, aes(x=fecha,y = predlog), size = .5, color= col[2]) +  theme_bw() + 
   annotate("text",x=ymd("20200330"), y=1, label="Fuente @msalnacion\n by @larysar",color="red",size=2) + scale_y_log10() + 
   annotate("text", x=ymd("20200325"), y=3,label=paste("R0 =", r, "[", r0[1], ",", r0[2],"]"),size=3) + 
-  annotate("text", x=ymd("20200325"), y=2,label=paste("Tiempo de duplicación =", tau),size=3)
+  annotate("text", x=ymd("20200325"), y=2,label=paste("Capacidad de carga =", capacidadcarga),size=3)
 
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArTotalesLog.jpg",width=6,height=6,units="in",dpi=600)
 
