@@ -124,7 +124,7 @@ ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunit
 
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
 
-mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.6),data=.) )
+mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.5,beta=0.8),data=.) )
 mod  %>% do(data.frame(
   var = names(coef(.$mod)),tau = log(2)/coef(.$mod)[2],
   coef(summary(.$mod))) 
