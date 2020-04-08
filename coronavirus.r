@@ -69,7 +69,7 @@ predexp
 # https://github.com/midas-network/COVID-19/tree/master/parameter_estimates/2019_novel_coronavirus
 # 
 require(R0)
-mGT<-generation.time("gamma", c(5.2, 1.5))
+mGT<-generation.time("gamma", c(7.5, 3.4))
 est.R0.EG(cor$casosdia,mGT,begin = 1,end=22)
 
 tl <- est.R0.ML(cor$casosdia,mGT,begin = 1,end=22)
@@ -120,9 +120,9 @@ require(tidyr)
 cor1 <- cor %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in% c("contactos","importados","comunitarios")) %>% mutate(N = ifelse(N==0,NA,N))
 
 ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm, se=F) + scale_y_log10() + scale_color_viridis_d() + ylab("Casos")
-ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
 
-ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos")
+ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
 
 mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.5,beta=0.8),data=.) )
 mod  %>% do(data.frame(
@@ -140,10 +140,10 @@ predexp <- cor1 %>%
 
 
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
-ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg",width=6,height=6,units="in",dpi=600)
+#ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg",width=6,height=6,units="in",dpi=600)
 
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
-ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionLog.jpg",width=6,height=6,units="in",dpi=600)
+#ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionLog.jpg",width=6,height=6,units="in",dpi=600)
 
 
 

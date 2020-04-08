@@ -1,0 +1,206 @@
+---
+title: "Estimación de R Efectivo"
+author: "Leonardo A. Saravia"
+date: "4/7/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+# Estimación de cambios en el número reproductivo efectivo $R_e$
+
+```{r setup, include=FALSE,echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+require(dplyr)
+require(readr)
+require(lubridate)
+require(ggplot2)
+
+cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv") %>% dplyr::select(fecha:comunitarios)
+cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
+#
+# OJO, los casos en estudio = ? comunitarios no estan acumulados
+#
+
+```
+
+* Un parametro importante es el 'Serial interval' (SI). El SI es el tiempo entre el inicio de los síntomas de cada caso de la enfermedad en cuestión, y el inicio de los síntomas en cualquier caso secundario que resulte de la transmisión de los casos primarios. En otras palabras, es el tiempo entre casos en la cadena (de ramificación) de transmisión de la enfermedad. El SI es, de hecho, una distribución estadística de tiempos de intervalo en serie, en lugar de un valor fijo. Esa distribución se puede simular, generalmente utilizando una distribución gamma discreta con una media y desviación estándar dada.S
+
+* Se utilizo un 'Serial interval' (SI) estimado por  Li _et al._ https://www.nejm.org/doi/full/10.1056/NEJMoa2001316 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
+
+
+
+```{r Refectivo, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+require(EpiEstim)
+
+cor <- cor %>% mutate(importadosdia=importados-lag(importados))
+cor$importadosdia[1] <- 1
+cor <- cor %>% mutate(localesdia=casosdia - importadosdia)
+incid <- cor %>% select(localesdia,importadosdia) %>% rename(local=localesdia,imported=importadosdia)
+ar_res_parametric_si <- estimate_R(incid, 
+                                   method = "uncertain_si", 
+                                   config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
+                                                             min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
+                                                             min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000))
+)
+
+# custom results plotting function to avoid the ugly
+# TableGrob messages returned by the plotting function
+# in the EpiEstim package
+plot_Ri <- function(estimate_R_obj) {
+  p_I <- plot(estimate_R_obj, "incid", add_imported_cases=TRUE) # plots the incidence
+  p_SI <- plot(estimate_R_obj, "SI") # plots the serial interval distribution
+  p_Ri <- plot(estimate_R_obj, "R")
+  return(gridExtra::grid.arrange(p_I, p_SI, p_Ri, ncol = 1))
+}
+
+
+plot_Ri(ar_res_parametric_si)
+
+
+t_start <- seq(5, length(incid$local)-1)   
+t_end <- t_start + 1            
+ar_res_parametric_si_daily <- estimate_R(incid, 
+                                   method = "uncertain_si", 
+                                   config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
+                                                             min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
+                                                             min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000,
+                                                             t_start = t_start,t_end = t_end))
+                                   )
+
+plot(ar_res_parametric_si_daily, "R") +
+  scale_y_continuous(trans='log2') +
+  geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5)
+```
+
+## Estimaciones usando modelos log-lineares
+
+
+```{r log-linear, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+#install.packages('projections')
+
+require(incidence)
+require(projections)
+require(tidyr)
+cor_incidence <- cor  %>% select(fecha, casosdia) %>% uncount(casosdia)
+cor_incidence_obj <- incidence::incidence(cor_incidence$fecha)
+
+cor_incidence_peak <- find_peak(cor_incidence_obj)
+
+plot(cor_incidence_obj) + geom_vline(xintercept = cor_incidence_peak, 
+    col = "red", lty = 2) + labs(title = "Casos diarios confirmados por laboratorio Coronavirus Argentina", 
+    subtitle = "(La linea roja indica el pico de incidencia)")
+
+
+cor_incidence_fit <- incidence::fit(cor_incidence_obj, 
+    split = cor_incidence_peak)
+
+
+# plot the incidence data and the model fit
+plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) + 
+    labs(title = "Incidencia Observada y modelada para casos COVID-19", 
+        subtitle = "Argentina, 2020") + theme_bw()
+
+```
+
+
+From the model, we can extract various parameters of interest: the **growth rate prior to the peak was `r format(incidence::get_info(cor_incidence_fit, "r")[1],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,1],digits=2,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,2],digits=2,nsmall=2)`), and the **decay rate after the peak was `r format(incidence::get_info(cor_incidence_fit, "r")[2],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,2],digits=3,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,1],digits=3,nsmall=2)`).
+
+These growth and decay rates are equivalent to a **doubling time of `r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` days** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2],digits=1,nsmall=1)` days), and a **halving time of `r format(incidence::get_info(cor_incidence_fit, "halving")[1],digits=1,nsmall=1)` days** (95% CI `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[2],digits=1,nsmall=1)` days). 
+
+Las estimaciones del tiempo de duplicación y reducción a la mitad son muy útiles para informar la política de intervención de salud pública.
+
+## Proyecciones
+
+`projections` uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
+
+$$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
+
+where $w()$ is the probability mass function (PMF) of the serial interval, and $y_s$ is the incidence at time $s$.
+
+```{r proyect, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+require(epitrix)
+require(distcrete)
+require(tidyr)
+mu <- 7.5 # days
+sigma <- 3.4 # days
+param <- gamma_mucv2shapescale(mu, sigma / mu)
+w <- distcrete("gamma", interval = 1,
+                 shape = param$shape,
+                 scale = param$scale, w = 0)
+growth_R0 <- lm2R0_sample(cor_incidence_fit$before$model, w)
+
+hist(growth_R0, col = "grey", border = "white", main = "Distribution of R0")
+summary(growth_R0)
+
+decay_R0 <- lm2R0_sample(cor_incidence_fit$after$model, w)
+hist(decay_R0, col = "grey", border = "white", main = "Distribution of R0")
+summary(decay_R0)
+
+set.seed(1)
+pred_fwd_days <- 10
+date_range <- 1:(which(get_dates(cor_incidence_obj) == cor_incidence_peak) - pred_fwd_days)
+test_pred_growth <- project(cor_incidence_obj[date_range],
+                            R = median(growth_R0),
+                            si = w,
+                            n_days = pred_fwd_days, n_sim = 1000)
+# convert the test_pred_growth matrix to a data frame and get the median 
+# incidence for all the simulations for each date
+test_pred_growth_median_counts <- test_pred_growth %>% 
+  as.data.frame() %>%
+  pivot_longer(-dates, 
+               names_to="simulation", 
+               values_to="incidence") %>%
+  group_by(dates) %>%
+  summarise(incident_cases=as.integer(median(incidence))) %>%
+  mutate(data_type = "projection")
+test_pred_growth_median_counts %>%
+  bind_rows(tibble(dates=get_dates(cor_incidence_obj),
+                   incident_cases=get_counts(cor_incidence_obj),
+                   data_type="observed")) %>%
+  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
+    geom_point() +
+    geom_line() + theme_bw() + 
+    labs(x="", y="Incidencia diaria casos confirmados",
+         title="Casos observados vs proyección a partir de la fase de crecimiento\n de casos incidentes, Argentina",
+         subtitle=paste("(Proyección bada en los casos hasta el", 
+                        format(cor_incidence_peak - days(pred_fwd_days), "%d %B %Y"),
+                        ")")) +
+         theme(legend.position="top", legend.title = element_blank())
+
+#
+# 
+#
+set.seed(1)
+pred_fwd_days <- 0 # 5
+date_range <- which(get_dates(cor_incidence_obj) == cor_incidence_peak):(length(get_dates(cor_incidence_obj)) - pred_fwd_days)
+test_pred_decay <- project(cor_incidence_obj[date_range],
+                            R = median(decay_R0),
+                            si = w,
+                            n_days = 60, n_sim = 1000)
+# convert the test_pred_decay matrix to a data frame and get the median 
+# incidence for all the simulations for each date
+test_pred_decay_median_counts <- test_pred_decay %>% 
+  as.data.frame() %>%
+  pivot_longer(-dates, 
+               names_to="simulation", 
+               values_to="incidence") %>%
+  group_by(dates) %>%
+  summarise(incident_cases=as.integer(median(incidence))) %>%
+  mutate(data_type = "projection")
+test_pred_decay_median_counts %>%
+  bind_rows(tibble(dates=get_dates(cor_incidence_obj),
+                   incident_cases=get_counts(cor_incidence_obj),
+                   data_type="observed")) %>%
+  ggplot(aes(x=dates, y=incident_cases, colour=data_type)) +
+    geom_point() + theme_bw() + 
+    geom_line() +
+    labs(x="", y="Casos confirmados diarios",
+         title="Casos incidentes observados versus proyection de la fase de decaimiento\nen Argentina",
+         subtitle=paste("(Proyección basada en los casos de la fase de decaimiento hasta ", 
+          format(get_dates(cor_incidence_obj)[(length(get_dates(cor_incidence_obj)) - pred_fwd_days)], "%d %B %Y"),
+          ")")) +
+     theme(legend.position="top", legend.title = element_blank())
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArProyeccionDecaimiento.jpg",width=8,height=6,units="in",dpi=600)
+
+```
