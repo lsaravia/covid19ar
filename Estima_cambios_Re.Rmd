@@ -5,9 +5,26 @@ date: "4/7/2020"
 output: html_document
 editor_options: 
   chunk_output_type: console
+bibliography: Epidemics.bib
 ---
 
-# Estimación de cambios en el número reproductivo efectivo $R_e$
+
+
+# Estimación de cambios en el número reproductivo efectivo $R_t$
+
+Basado en el posteo de Tim Churches https://timchurches.github.io/blog/posts/2020-02-18-analysing-covid-19-2019-ncov-outbreak-data-with-r-part-1/#estimating-changes-in-the-effective-reproduction-number
+
+The value of $R_t$ Rt represents the expected number of secondary cases arising from a primary case infected at time t. This value changes throughout an outbreak. If the value of Rt is and remains below one, the outbreak will die out. However, while Rt is larger than one, a sustained outbreak is likely. The aim of control interventions is typically to reduce the reproduction number below one [@Thompson2019]. 
+
+* Método explicado en estos papers
+
+    - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3816335/
+    
+    - https://www.sciencedirect.com/science/article/pii/S1755436519300350?via%3Dihub
+    
+* Lo importante es que permite la inclusión de los casos importados y que se puede estimar el intervalo serial a partir de seguimiento de casos, 
+  y también incluir variablidad en la distribucion del intervalo serial cuando se asume una distribución gamma discreta.  
+
 
 ```{r setup, include=FALSE,echo=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
@@ -19,7 +36,6 @@ require(ggplot2)
 cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv") %>% dplyr::select(fecha:comunitarios)
 cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
 #
-# OJO, los casos en estudio = ? comunitarios no estan acumulados
 #
 
 ```
@@ -40,7 +56,8 @@ incid <- cor %>% select(localesdia,importadosdia) %>% rename(local=localesdia,im
 ar_res_parametric_si <- estimate_R(incid, 
                                    method = "uncertain_si", 
                                    config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
-                                                             min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
+                                                             min_mean_si = 1, max_mean_si = 8.4, 
+                                                             std_si = 3.4, std_std_si = 1, 
                                                              min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000))
 )
 
@@ -75,6 +92,9 @@ plot(ar_res_parametric_si_daily, "R") +
 
 ## Estimaciones usando modelos log-lineares
 
+* Esto divide la curva de incidencia en dos partes, antes y despues del pico, para estimar el tiempo de duplicación y de reduccion a la mitad 
+
+* La duda que yo tengo es si sería mejor usar los casos de transmición local, es decir exceptuando los importados.
 
 ```{r log-linear, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 #install.packages('projections')
@@ -111,6 +131,8 @@ These growth and decay rates are equivalent to a **doubling time of `r format(in
 Las estimaciones del tiempo de duplicación y reducción a la mitad son muy útiles para informar la política de intervención de salud pública.
 
 ## Proyecciones
+
+* Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente. 
 
 `projections` uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
 
@@ -177,7 +199,7 @@ date_range <- which(get_dates(cor_incidence_obj) == cor_incidence_peak):(length(
 test_pred_decay <- project(cor_incidence_obj[date_range],
                             R = median(decay_R0),
                             si = w,
-                            n_days = 60, n_sim = 1000)
+                            n_days = 90, n_sim = 1000)
 # convert the test_pred_decay matrix to a data frame and get the median 
 # incidence for all the simulations for each date
 test_pred_decay_median_counts <- test_pred_decay %>% 
