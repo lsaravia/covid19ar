@@ -124,19 +124,18 @@ ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smoo
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line()
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
 
-mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=nls(N~ alpha*exp(dias*beta),start=c(alpha=1.5,beta=0.8),data=.) )
-mod  %>% do(data.frame(
-  var = names(coef(.$mod)),tau = log(2)/coef(.$mod)[2],
-  coef(summary(.$mod))) 
-)
-newdat <- data.frame(dias = 0:26)
+mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=drm(N ~ dias, fct=L.3() , data = .) )
+mod  %>% do(data.frame(max= coef(.$mod)[2],.$tipo))
+
+newdat <- data.frame(dias = 0:ldia)
 library(tidyverse)  
 predexp <- cor1 %>%
   group_by(tipo) %>%
   nest %>%
-  mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.6),data=.))) %>%
+    mutate(mod  = purrr::map(.x = data, .f = ~ drm(N ~ dias, fct=L.3() , data = .))) %>% 
+#    mutate(mod  = purrr::map(.x = data, .f = ~ nls(N~ alpha*exp(dias*beta),start=c(alpha=1.4,beta=0.2),data=.))) %>%
   mutate(pred = purrr::map(.x = mod, ~ predict(., newdat))) %>% 
-  dplyr::select(tipo,pred) %>% unnest %>% cbind(newdat = newdat) %>% mutate(fecha = min(cor1$fecha)+dias)
+  dplyr::select(tipo,pred) %>% unnest(cols=pred) %>% bind_cols(dias = rep(newdat$dias,3)) %>% mutate(fecha = min(cor1$fecha)+dias)
 
 
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 

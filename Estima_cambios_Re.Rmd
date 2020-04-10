@@ -1,5 +1,5 @@
 ---
-title: "Estimación de R Efectivo"
+title: "Estimación de R Efectivo y otros parámetros"
 author: "Leonardo A. Saravia"
 date: "4/7/2020"
 output: html_document
@@ -14,7 +14,7 @@ bibliography: Epidemics.bib
 
 Basado en el posteo de Tim Churches https://timchurches.github.io/blog/posts/2020-02-18-analysing-covid-19-2019-ncov-outbreak-data-with-r-part-1/#estimating-changes-in-the-effective-reproduction-number
 
-The value of $R_t$ Rt represents the expected number of secondary cases arising from a primary case infected at time t. This value changes throughout an outbreak. If the value of Rt is and remains below one, the outbreak will die out. However, while Rt is larger than one, a sustained outbreak is likely. The aim of control interventions is typically to reduce the reproduction number below one [@Thompson2019]. 
+The value of $R_t$ represents the expected number of secondary cases arising from a primary case infected at time t. This value changes throughout an outbreak. If the value of $R_t$ is and remains below one, the outbreak will die out. However, while $R_t$ is larger than one, a sustained outbreak is likely. The aim of control interventions is typically to reduce the reproduction number below one [@Thompson2019]. 
 
 * Método explicado en estos papers
 
@@ -90,11 +90,11 @@ plot(ar_res_parametric_si_daily, "R") +
   geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5)
 ```
 
-## Estimaciones usando modelos log-lineares
+## Estimaciones usando modelos log-lineales
 
 * Esto divide la curva de incidencia en dos partes, antes y despues del pico, para estimar el tiempo de duplicación y de reduccion a la mitad 
 
-* La duda que yo tengo es si sería mejor usar los casos de transmición local, es decir exceptuando los importados.
+* La duda que yo tengo es si sería mejor usar los casos de transmisión local, es decir exceptuando los importados.
 
 ```{r log-linear, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 #install.packages('projections')
@@ -132,9 +132,9 @@ Las estimaciones del tiempo de duplicación y reducción a la mitad son muy úti
 
 ## Proyecciones
 
-* Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente. 
+* Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente, basado en [@Nouvellet2018]. 
 
-`projections` uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
+It uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
 
 $$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
 
@@ -226,3 +226,5 @@ test_pred_decay_median_counts %>%
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArProyeccionDecaimiento.jpg",width=8,height=6,units="in",dpi=600)
 
 ```
+
+## Bibliografía
