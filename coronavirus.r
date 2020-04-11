@@ -122,7 +122,6 @@ cor1 <- cor %>% gather(tipo,N,casos:comunitarios,importados) %>% filter(tipo %in
 ggplot(cor1 ,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + stat_smooth(method=lm, se=F) + scale_y_log10() + scale_color_viridis_d() + ylab("Casos")
 
 ggplot(cor1,aes(x=dias,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line()
-ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
 
 mod <- cor1 %>% filter(N>0) %>% group_by(tipo) %>% do(mod=drm(N ~ dias, fct=L.3() , data = .) )
 mod  %>% do(data.frame(max= coef(.$mod)[2],.$tipo))
@@ -142,6 +141,8 @@ ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_col
 #ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacion.jpg",width=6,height=6,units="in",dpi=600)
 
 ggplot(cor1,aes(x=fecha,y=N,color=tipo)) + geom_point() + theme_bw() + scale_color_viridis_d() + scale_color_viridis_d() + scale_y_log10() + ylab("Casos") + geom_line(data=predexp, aes(x=fecha,y = pred,color=tipo), size = .5) 
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunitarios.jpg",width=6,height=6,units="in",dpi=600)
+
 #ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionLog.jpg",width=6,height=6,units="in",dpi=600)
 
 
@@ -173,5 +174,5 @@ require(ggplot2)
 
 ggplot(cor1, aes(x = N, y = casosdia, colour=country) ) + scale_y_log10() +  scale_x_log10() + 
   geom_point() +  theme_bw() +  guides(fill=FALSE) + scale_color_viridis_d() + geom_line() + xlab("Casos Totales") + ylab( "Casos por Día") + 
-  annotate("text",x=1850, y=10, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) 
+  annotate("text",x=1850, y=10, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) + theme(legend.position="bottom")
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaGlobalNuevosVsTotales.jpg",width=6,height=6,units="in",dpi=600)

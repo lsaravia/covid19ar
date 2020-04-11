@@ -14,16 +14,9 @@ bibliography: Epidemics.bib
 
 Basado en el posteo de Tim Churches https://timchurches.github.io/blog/posts/2020-02-18-analysing-covid-19-2019-ncov-outbreak-data-with-r-part-1/#estimating-changes-in-the-effective-reproduction-number
 
-The value of $R_t$ represents the expected number of secondary cases arising from a primary case infected at time t. This value changes throughout an outbreak. If the value of $R_t$ is and remains below one, the outbreak will die out. However, while $R_t$ is larger than one, a sustained outbreak is likely. The aim of control interventions is typically to reduce the reproduction number below one [@Thompson2019]. 
+El valor de $R_t$ representa el número esperado de casos secundarios que surgen de un caso primario infectado en el momento $t$. Este valor cambia a lo largo de un brote. Si el valor de $R_t$ permanece por debajo de uno, el brote se extinguirá. Sin embargo, cuando $R_t$ es mayor que uno, es probable que se produzca un brote sostenido. El objetivo de las intervenciones de control es típicamente reducir el número de reproducción por debajo de uno [@Thompson2019].
 
-* Método explicado en estos papers
-
-    - https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3816335/
-    
-    - https://www.sciencedirect.com/science/article/pii/S1755436519300350?via%3Dihub
-    
-* Lo importante es que permite la inclusión de los casos importados y que se puede estimar el intervalo serial a partir de seguimiento de casos, 
-  y también incluir variablidad en la distribucion del intervalo serial cuando se asume una distribución gamma discreta.  
+Método de estimación aplicado [@Cori2013; @Thompson2019] permite la inclusión de los casos importados y que se puede estimar el intervalo serial a partir de seguimiento de casos y también incluir variablidad en la distribucion del intervalo serial cuando se asume una distribución gamma discreta.  
 
 
 ```{r setup, include=FALSE,echo=FALSE}
@@ -42,7 +35,7 @@ cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha)))
 
 * Un parametro importante es el 'Serial interval' (SI). El SI es el tiempo entre el inicio de los síntomas de cada caso de la enfermedad en cuestión, y el inicio de los síntomas en cualquier caso secundario que resulte de la transmisión de los casos primarios. En otras palabras, es el tiempo entre casos en la cadena (de ramificación) de transmisión de la enfermedad. El SI es, de hecho, una distribución estadística de tiempos de intervalo en serie, en lugar de un valor fijo. Esa distribución se puede simular, generalmente utilizando una distribución gamma discreta con una media y desviación estándar dada.S
 
-* Se utilizo un 'Serial interval' (SI) estimado por  Li _et al._ https://www.nejm.org/doi/full/10.1056/NEJMoa2001316 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
+* Se utilizo un 'Serial interval' (SI) estimado por @Li2020 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
 
 
 
@@ -123,10 +116,9 @@ plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) +
 
 ```
 
+Del modelo, podemos extraer varios parámetros de interés: **la tasa de crecimiento antes del pico fue `r format(incidence::get_info(cor_incidence_fit, "r")[1],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,1],digits=2,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,2],digits=2,nsmall=2)`), y la **tasa de decaimiento después el pico fue `r format(incidence::get_info(cor_incidence_fit, "r")[2],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,2],digits=3,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,1],digits=3,nsmall=2)`).
 
-From the model, we can extract various parameters of interest: the **growth rate prior to the peak was `r format(incidence::get_info(cor_incidence_fit, "r")[1],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,1],digits=2,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,2],digits=2,nsmall=2)`), and the **decay rate after the peak was `r format(incidence::get_info(cor_incidence_fit, "r")[2],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,2],digits=3,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,1],digits=3,nsmall=2)`).
-
-These growth and decay rates are equivalent to a **doubling time of `r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` days** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2],digits=1,nsmall=1)` days), and a **halving time of `r format(incidence::get_info(cor_incidence_fit, "halving")[1],digits=1,nsmall=1)` days** (95% CI `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[2],digits=1,nsmall=1)` days). 
+Estas tasas de crecimiento y decaimiento son equivalentes a **un tiempo de duplicación `r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2],digits=1,nsmall=1)` días), and a **halving time of `r format(incidence::get_info(cor_incidence_fit, "halving")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[2],digits=1,nsmall=1)` días). 
 
 Las estimaciones del tiempo de duplicación y reducción a la mitad son muy útiles para informar la política de intervención de salud pública.
 
@@ -134,11 +126,11 @@ Las estimaciones del tiempo de duplicación y reducción a la mitad son muy úti
 
 * Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente, basado en [@Nouvellet2018]. 
 
-It uses data on daily incidence, the _serial interval_ (time between onsets of infectors and infectees) and the reproduction number to simulate plausible epidemic trajectories and project future incidence. It relies on a branching process where daily incidence follows a Poisson process determined by a daily infectiousness, computed as:
+Utiliza datos sobre la incidencia diaria, _el intervalo de serial_ (tiempo entre el inicio de los infectores y los infectados) y el número de reproducción, para simular trayectorias de epidemia plausibles y proyectar la incidencia futura. Se basa en un proceso de ramificación donde la incidencia diaria sigue un proceso de Poisson determinado por una infecciosidad diaria, calculada como:
 
 $$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
 
-where $w()$ is the probability mass function (PMF) of the serial interval, and $y_s$ is the incidence at time $s$.
+donde $w()$ es la funcion de masa de probabilidad del intervalo serial, y $y_s$ es la incidencia en el tiempo $s$.
 
 ```{r proyect, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 require(epitrix)
