@@ -26,7 +26,9 @@ cor1 <- corg %>% gather(date,N,5:ncol(corg) ) %>% arrange(country) %>% mutate(ca
 
 require(ggrepel)
 cor1 <- cor1 %>% group_by(country) %>% mutate(lbl=ifelse(row_number()==n(), as.character(N),""))
-ggplot(cor1,aes(x=dias,y=N,color=country,label=lbl)) + geom_point() + theme_bw() + scale_color_viridis_d()  + ylab("Fallecidos") + geom_line( size = .5) + geom_label_repel() +  annotate("text",x=30, y=10, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) + theme(legend.position=c(0.15,0.8)) + scale_y_log10()
-
+ggplot(cor1,aes(x=dias,y=N,color=country,label=lbl)) + geom_point() + theme_bw() + scale_color_viridis_d()  + ylab("Fallecidos") + geom_line( size = .5) + geom_label_repel() +  
+  annotate("text",x=30, y=10, label=paste0("Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar al ",max(cor1$fecha)),color="red",size=2) + theme(legend.position=c(0.15,0.8)) + scale_y_log10()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaGlobalFallecidosLog.jpg",width=8,height=6,units="in",dpi=600)
 
 ggplot(cor1,aes(x=dias,y=casosdia,color=country,label=lbl)) + geom_point() + theme_bw() + scale_color_viridis_d()  + ylab("Fallecidos por día") + geom_line( size = .5) + geom_label_repel() +  annotate("text",x=30, y=10, label="Fuente https://systems.jhu.edu/research/public-health/ncov/\n by @larysar",color="red",size=2) + theme(legend.position=c(0.15,0.8)) 
+

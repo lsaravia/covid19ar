@@ -39,7 +39,7 @@ cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha)))
 
 
 
-```{r Refectivo, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+```{r Refectivo, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE,cache=TRUE}
 require(EpiEstim)
 
 cor <- cor %>% mutate(importadosdia=importados-lag(importados))
@@ -85,9 +85,16 @@ plot(ar_res_parametric_si_daily, "R") +
 
 ## Estimaciones usando modelos log-lineales
 
+
+La fase inicial de un brote, cuando se muestra en un gráfico de semi-log (el eje y con una transformación logarítmica), aparece (algo) lineal. Esto sugiere que podemos modelar el crecimiento epidémico y decaimiento, utilizando un modelo log-lineal simple de la forma:
+
+$$log(y) = rt + b$$
+
+donde $y$ es la incidencia, $r$ es la tasa de crecimiento, $t$ es el número de días desde un punto específico en el tiempo (generalmente el inicio del brote) y $b$ es la ordenada de origenSe ajustan modelos separados a las partes de crecimiento y decadencia de la curva de epidemia (datos de incidencia).
+
 * Esto divide la curva de incidencia en dos partes, antes y despues del pico, para estimar el tiempo de duplicación y de reduccion a la mitad 
 
-* La duda que yo tengo es si sería mejor usar los casos de transmisión local, es decir exceptuando los importados.
+### Primero estimamos con los casos totales 
 
 ```{r log-linear, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 #install.packages('projections')
@@ -95,7 +102,7 @@ plot(ar_res_parametric_si_daily, "R") +
 require(incidence)
 require(projections)
 require(tidyr)
-cor_incidence <- cor  %>% select(fecha, casosdia) %>% uncount(casosdia)
+cor_incidence <- cor  %>% dplyr::select(fecha, casosdia) %>% uncount(casosdia)
 cor_incidence_obj <- incidence::incidence(cor_incidence$fecha)
 
 cor_incidence_peak <- find_peak(cor_incidence_obj)
@@ -116,23 +123,100 @@ plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) +
 
 ```
 
+
+El **pico de la incidencia fue el `r cor_incidence_peak`**
+
 Del modelo, podemos extraer varios parámetros de interés: **la tasa de crecimiento antes del pico fue `r format(incidence::get_info(cor_incidence_fit, "r")[1],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,1],digits=2,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,2],digits=2,nsmall=2)`), y la **tasa de decaimiento después el pico fue `r format(incidence::get_info(cor_incidence_fit, "r")[2],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,2],digits=3,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,1],digits=3,nsmall=2)`).
 
-Estas tasas de crecimiento y decaimiento son equivalentes a **un tiempo de duplicación `r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2],digits=1,nsmall=1)` días), and a **halving time of `r format(incidence::get_info(cor_incidence_fit, "halving")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[2],digits=1,nsmall=1)` días). 
+Estas tasas de crecimiento y decaimiento son equivalentes a **un tiempo de duplicación `r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2],digits=1,nsmall=1)` días), y un **tiempo de reducción a la mitad `r format(incidence::get_info(cor_incidence_fit, "halving")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "halving.conf")[2],digits=1,nsmall=1)` días). 
+
+### Luego con casos Locales (no importados)
+
+```{r log-linearlocal, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+
+
+cor_incidence <- cor  %>% dplyr::select(fecha, localesdia) %>% uncount(localesdia)
+cor_incidence_obj <- incidence::incidence(cor_incidence$fecha)
+
+cor_incidence_peak <- find_peak(cor_incidence_obj)
+
+plot(cor_incidence_obj) + geom_vline(xintercept = cor_incidence_peak, 
+    col = "red", lty = 2) + labs(title = "Casos diarios **locales** confirmados por laboratorio Coronavirus Argentina", 
+    subtitle = "(La linea roja indica el pico de incidencia)")
+
+
+cor_incidence_fit <- incidence::fit(cor_incidence_obj, 
+    split = cor_incidence_peak)
+
+
+# plot the incidence data and the model fit
+plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) + 
+    labs(title = "Incidencia Observada y modelada para casos **locales** COVID-19", 
+        subtitle = "Argentina, 2020") + theme_bw()
+
+
+```
+
+* Tomando solo los casos **locales** se observa que luego del pico de incidencia del **`r cor_incidence_peak`** la epidemia no está en disminución
+
+* La tasa de crecimiento antes del pico fue **`r format(incidence::get_info(cor_incidence_fit, "r")[1],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,1],digits=2,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[1,2],digits=2,nsmall=2)`)
+
+* La tasa de crecimiento después el pico fue **`r format(incidence::get_info(cor_incidence_fit, "r")[2],digits=2,nsmall=2)`** (95% CI `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,2],digits=3,nsmall=2)` - `r format(incidence::get_info(cor_incidence_fit, "r.conf")[2,1],digits=3,nsmall=2)`).
+
+* El tiempo de duplicacion de la primer parte es es **`r format(incidence::get_info(cor_incidence_fit, "doubling")[1],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1,1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[1,2],digits=1,nsmall=1)` días)
+
+* El tiempo de duplicación de la segunda parte **`r format(incidence::get_info(cor_incidence_fit, "doubling")[2],digits=1,nsmall=1)` días** (95% CI `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2,1],digits=1,nsmall=1)` - `r format(incidence::get_info(cor_incidence_fit, "doubling.conf")[2,2],digits=1,nsmall=1)` días). 
+
+### Luego con casos Locales vs importados
+
+* Comparacion de locales vs importados, los importados deberian ir disminuyendo, la proyecccion es que los locales pueden aumentar pero con un intervalo de confianza muy amplio.  
+
+```{r log-linearlocalImport, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+
+
+cor_incidence <- cor  %>% dplyr::select(fecha, localesdia) %>% uncount(localesdia) %>% mutate(tipo="locales")
+cor_incidence <- bind_rows(cor_incidence,
+                           cor  %>% dplyr::select(fecha, importadosdia) %>% uncount(importadosdia) %>% mutate(tipo="Importados")
+                           )
+cor_incidence_obj1 <- incidence::incidence(cor_incidence$fecha, groups=cor_incidence$tipo)
+
+cor_incidence_peak <- find_peak(cor_incidence_obj1)
+
+plot(cor_incidence_obj1) + geom_vline(xintercept = cor_incidence_peak, 
+     col = "red", lty = 2) + labs(title = "Casos diarios confirmados por laboratorio Coronavirus Argentina", 
+                                  subtitle = "(La linea roja indica el pico de incidencia)") + theme_bw()
+
+cor_incidence_fit1 <- incidence::fit(cor_incidence_obj1, 
+    split = cor_incidence_peak)
+
+# plot the incidence data and the model fit
+plot(cor_incidence_obj1) %>% add_incidence_fit(cor_incidence_fit1) + 
+    labs(title = "Incidencia Observada y modelada para casos COVID-19", 
+        subtitle = "Argentina, 2020") + theme_bw()
+
+# str(cor_incidence_fit$after)
+# get_info(cor_incidence_fit$before, "r")
+# get_info(cor_incidence_fit$before, "r.conf")
+# get_info(cor_incidence_fit$after, "r")
+# get_info(cor_incidence_fit$after, "r.conf")
+# get_info(cor_incidence_fit$after, "halving")
+# get_info(cor_incidence_fit$after, "halving.conf")
+
+```
 
 Las estimaciones del tiempo de duplicación y reducción a la mitad son muy útiles para informar la política de intervención de salud pública.
 
 ## Proyecciones
 
-* Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente, basado en [@Nouvellet2018]. 
+* Esta estimacion de proyecciones requiere la estimación del R0 para la fase creciente y decreciente, basado en [@Nouvellet2018]. Cuando tomamos los casos locales, si dividimos en dos fases por el pico de incidencia la segunda fase no es decreciente.  
 
-Utiliza datos sobre la incidencia diaria, _el intervalo de serial_ (tiempo entre el inicio de los infectores y los infectados) y el número de reproducción, para simular trayectorias de epidemia plausibles y proyectar la incidencia futura. Se basa en un proceso de ramificación donde la incidencia diaria sigue un proceso de Poisson determinado por una infecciosidad diaria, calculada como:
+* Utiliza datos sobre la incidencia diaria, _el intervalo de serial_ (tiempo entre el inicio de los infectores y los infectados) y el número de reproducción, para simular trayectorias de epidemia plausibles y proyectar la incidencia futura. Se basa en un proceso de ramificación donde la incidencia diaria sigue un proceso de Poisson determinado por una infecciosidad diaria, calculada como:
 
 $$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
 
 donde $w()$ es la funcion de masa de probabilidad del intervalo serial, y $y_s$ es la incidencia en el tiempo $s$.
 
-```{r proyect, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
+```{r proyectR0, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 require(epitrix)
 require(distcrete)
 require(tidyr)
@@ -150,6 +234,13 @@ summary(growth_R0)
 decay_R0 <- lm2R0_sample(cor_incidence_fit$after$model, w)
 hist(decay_R0, col = "grey", border = "white", main = "Distribution of R0")
 summary(decay_R0)
+
+```
+
+### En esta distribución de R0 se observa que para la segunda fase el R0 puede ser > 1
+
+
+```{r proyect, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE}
 
 set.seed(1)
 pred_fwd_days <- 10
@@ -210,8 +301,8 @@ test_pred_decay_median_counts %>%
     geom_point() + theme_bw() + 
     geom_line() +
     labs(x="", y="Casos confirmados diarios",
-         title="Casos incidentes observados versus proyection de la fase de decaimiento\nen Argentina",
-         subtitle=paste("(Proyección basada en los casos de la fase de decaimiento hasta ", 
+         title="Casos incidentes observados versus proyection de 2da fase\nen Argentina",
+         subtitle=paste("(Proyección basada en los casos de la 2da. fase hasta ", 
           format(get_dates(cor_incidence_obj)[(length(get_dates(cor_incidence_obj)) - pred_fwd_days)], "%d %B %Y"),
           ")")) +
      theme(legend.position="top", legend.title = element_blank())
