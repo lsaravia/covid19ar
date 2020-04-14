@@ -33,6 +33,6 @@
 
 ![](coronaGlobalFallecidosLog.jpg)
 
-- Este ultimo gráfico proyecta el número de casos no importados por día usando los datos a partir del pico de incidencia el 2020-04-30 
+- Este ultimo gráfico proyecta el número de casos no importados por día usando los datos a partir del pico de incidencia el 2020-03-30 
 
 ![](coronaArProyeccionDecaimiento.jpg)

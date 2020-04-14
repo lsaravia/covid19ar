@@ -157,7 +157,7 @@ ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArComparacionComunit
 
 corg <- read_csv("https://raw.githubusercontent.com/CSSEGISandData/COVID-19/master/csse_covid_19_data/csse_covid_19_time_series/time_series_covid19_confirmed_global.csv") 
 
-corg <- corg %>% rename(country="Country/Region",province="Province/State")  %>% filter( country %in% c("US","Italy","Germany", "Korea, South"))
+corg <- corg %>% rename(country="Country/Region",province="Province/State")  %>% filter( country %in% c("US","Italy","Brazil", "Korea, South"))
 require(tidyr)
 
 # Umbral de casos a partir de los cuales se calcula la curva

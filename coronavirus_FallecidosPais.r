@@ -12,10 +12,6 @@ require(readr)
 require(lubridate)
 require(tidyr)
 require(ggplot2)
-cor <- read_csv("/home/leonardo/Downloads/total-daily-covid-deaths.csv")
-
-cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
-#
 
 umbral <- 10
 
