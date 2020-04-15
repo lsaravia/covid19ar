@@ -20,19 +20,19 @@
 		- Observaciones
 
 
-- [coronavirus.r](coronavirus.r) Código R para estimación de modelos de crecimiento exponencial y logístico. El R0 se calcula para la fase exponencial que termina el día 26/03/2020. El código usa un ajuste por cuadrados mínimos no-lineales y las funciones de los paquete *nls* y *drc* para los ajustes y *ggplot2/tidyverse* para gráficos y bases de datos.   
+- [Estima_cambios_Re.Rmd](Estima_cambios_Re.Rmd) Código R markdown para estimación del Número Reproductivo efectivo, tasa de crecimiento y decaimiento, tiempo de duplicacion y de reducción a la mitad, proyección de la fase de decaimiento. (Se inicio la cuarentena el 20/03/2020)
+
+![](coronaArLogLinearModelImpLocal.jpg)
+
+![](coronaArRefectivo7dias.jpg)
 
 - [coronavirus_FallecidosPais.r](coronavirus_FallecidosPais.r) Código R para graficar los fallecidos comparando con otros países.
 
-- [Estima_cambios_Re.Rmd](Estima_cambios_Re.Rmd) Código R markdown para estimación del Número Reproductivo efectivo, tasa de crecimiento y decaimiento, tiempo de duplicacion y de reducción a la mitad, proyección de la fase de decaimiento. (Se inicio la cuarentena 20/03/2020)
+![](coronaGlobalFallecidosLog.jpg)
 
 
-![](coronaArTotalesLog.jpg)
+- [coronavirus.r](coronavirus.r) Código R para estimación de modelos de crecimiento exponencial y logístico. El R0 se calcula para la fase exponencial que termina el día 26/03/2020. El código usa un ajuste por cuadrados mínimos no-lineales y las funciones de los paquete *nls* y *drc* para los ajustes y *ggplot2/tidyverse* para gráficos y bases de datos.   
 
 ![](coronaArComparacionComunitarios.jpg)
 
-![](coronaGlobalFallecidosLog.jpg)
 
-- Este ultimo gráfico proyecta el número de casos no importados por día usando los datos a partir del pico de incidencia el 2020-03-30 
-
-![](coronaArProyeccionDecaimiento.jpg)

@@ -71,13 +71,15 @@ plot_Ri <- function(estimate_R_obj) {
 }
 #plot_Ri(ar_res_parametric_si)
 
-plot(ar_res_parametric_si, "incid", add_imported_cases=TRUE, ) + labs(title = "Casos por dia Importados y Locales COVID-19", 
-        subtitle = "Argentina, 2020") + theme_bw()
+plot(ar_res_parametric_si, "incid", add_imported_cases=TRUE, ) + labs(title = "Casos por dia Importados y Locales", 
+        subtitle = " COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArIncidenciaImpLocal.jpg",width=8,height=6,units="in",dpi=600)
 
 
 plot(ar_res_parametric_si, "SI")+ theme_bw()
 plot(ar_res_parametric_si, "R")+ theme_bw() + labs(title = "Nro Reproductivo Efectivo Basado en 7 días", 
         subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArRefectivo7dias.jpg",width=8,height=6,units="in",dpi=600)
 
 
 # Estimación basada en 1 dia
@@ -94,7 +96,8 @@ ar_res_parametric_si_daily <- estimate_R(incid,
 
 plot(ar_res_parametric_si_daily, "R") +
   scale_y_continuous(trans='log2') +
-  geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5)
+  geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5) + theme_bw() + labs(title = "Nro Reproductivo Efectivo Basado en 1 día", 
+        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
 ```
 
 ## Estimaciones usando modelos log-lineales
@@ -169,7 +172,7 @@ cor_incidence_fit <- incidence::fit(cor_incidence_obj,
 # plot the incidence data and the model fit
 plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) + 
     labs(title = "Incidencia Observada y modelada para casos **locales** COVID-19", 
-        subtitle = "Argentina, 2020") + theme_bw()
+        subtitle = "Argentina, 2020 by @larysar") + theme_bw()
 
 
 ```
@@ -208,8 +211,9 @@ cor_incidence_fit1 <- incidence::fit(cor_incidence_obj1,
 
 # plot the incidence data and the model fit
 plot(cor_incidence_obj1) %>% add_incidence_fit(cor_incidence_fit1) + 
-    labs(title = "Incidencia Observada y modelada para casos COVID-19", 
-        subtitle = "Argentina, 2020") + theme_bw()
+    labs(title = "Casos por Día Observados y modelados", 
+        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArLogLinearModelImpLocal.jpg",width=8,height=6,units="in",dpi=600)
 
 tbl <- cbind(get_info(cor_incidence_fit1$before, "r"),get_info(cor_incidence_fit1$before, "r.conf"))
 colnames(tbl)[1] <- "r"
