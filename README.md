@@ -33,6 +33,6 @@
 
 - [coronavirus.r](coronavirus.r) Código R para estimación de modelos de crecimiento exponencial y logístico. El R0 se calcula para la fase exponencial que termina el día 26/03/2020. El código usa un ajuste por cuadrados mínimos no-lineales y las funciones de los paquete *nls* y *drc* para los ajustes y *ggplot2/tidyverse* para gráficos y bases de datos.   
 
-![](coronaArComparacionComunitarios.jpg)
+![](coronaGlobalNuevosVsTotales.jpg)
 
 
