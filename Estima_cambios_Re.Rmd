@@ -50,7 +50,7 @@ cor <- cor %>% mutate(localesdia=casosdia - importadosdia)
 ```{r Refectivo, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE,cache=TRUE,cache.extra = tools::md5sum(csv_fname)}
 require(EpiEstim)
 
-incid <- cor %>% select(localesdia,importadosdia) %>% rename(local=localesdia,imported=importadosdia)
+incid <- cor %>% select(localesdia,importadosdia,fecha) %>% rename(local=localesdia,imported=importadosdia,dates=fecha)
 ar_res_parametric_si <- estimate_R(incid, 
                                    method = "uncertain_si", 
                                    config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
@@ -245,7 +245,7 @@ Las estimaciones del tiempo de duplicación y reducción a la mitad son muy úti
 
 * Utiliza datos sobre la incidencia diaria, _el intervalo de serial_ (tiempo entre el inicio de los infectores y los infectados) y el número de reproducción, para simular trayectorias de epidemia plausibles y proyectar la incidencia futura. Se basa en un proceso de ramificación donde la incidencia diaria sigue un proceso de Poisson determinado por una infecciosidad diaria, calculada como:
 
-$$\lambda_t = \sum_{s=1}^{t-1} y_s w(t-s)$$
+$$\lambda_t \sim Pois \left ( \sum_{s=1}^{t-1} y_s w(t-s) \right ) $$ 
 
 donde $w()$ es la funcion de masa de probabilidad del intervalo serial, y $y_s$ es la incidencia en el tiempo $s$.
 
