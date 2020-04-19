@@ -36,7 +36,7 @@ cor <- read_csv(csv_fname) %>% dplyr::select(fecha:comunitarios)
 cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
 cor <- cor %>% mutate(importadosdia=importados-lag(importados))
 cor$importadosdia[1] <- 1
-cor <- cor %>% mutate(localesdia=casosdia - importadosdia)
+cor <- cor %>% mutate(localesdia=casosdia - importadosdia, CABAdia=ifelse(is.na(CABAdia),0,CABAdia))
 
 
 ```
@@ -45,12 +45,13 @@ cor <- cor %>% mutate(localesdia=casosdia - importadosdia)
 
 * Se utilizo un 'Serial interval' (SI) estimado por @Li2020 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
 
+* Serial Interval por @He2020 media de 5.8 está dentro de los parametros simulados
 
 
 ```{r Refectivo, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE,cache=TRUE,cache.extra = tools::md5sum(csv_fname)}
 require(EpiEstim)
 
-incid <- cor %>% select(localesdia,importadosdia,fecha) %>% rename(local=localesdia,imported=importadosdia,dates=fecha)
+incid <- cor %>% dplyr::select(localesdia,importadosdia,fecha) %>% rename(local=localesdia,imported=importadosdia,dates=fecha)
 ar_res_parametric_si <- estimate_R(incid, 
                                    method = "uncertain_si", 
                                    config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
@@ -62,14 +63,6 @@ ar_res_parametric_si <- estimate_R(incid,
 # custom results plotting function to avoid the ugly
 # TableGrob messages returned by the plotting function
 # in the EpiEstim package
-plot_Ri <- function(estimate_R_obj) {
-  p_I <- plot(estimate_R_obj, "incid", add_imported_cases=TRUE, )
-  # plots the incidence
-  p_SI <- plot(estimate_R_obj, "SI") # plots the serial interval distribution
-  p_Ri <- plot(estimate_R_obj, "R")
-  return(gridExtra::grid.arrange(p_I, p_SI, p_Ri, ncol = 1))
-}
-#plot_Ri(ar_res_parametric_si)
 
 plot(ar_res_parametric_si, "incid", add_imported_cases=TRUE, ) + labs(title = "Casos por dia Importados y Locales", 
         subtitle = " COVID-19, Argentina, 2020 by @larysar") + theme_bw()
@@ -81,23 +74,50 @@ plot(ar_res_parametric_si, "R")+ theme_bw() + labs(title = "Nro Reproductivo Efe
         subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArRefectivo7dias.jpg",width=8,height=6,units="in",dpi=600)
 
+#
+# Para CABA
+#
+
+incid <- cor %>% dplyr::select(CABAdia,importadosdia,casosdia,localesdia,fecha) %>%
+                                 mutate(CABAimportados=round(CABAdia*importadosdia/casosdia),
+                                        CABAlocales=CABAdia-CABAimportados) %>%
+                                                         rename(local=CABAlocales,imported=CABAimportados,dates=fecha)
+CABA_res_parametric_si <- estimate_R(incid, 
+                                   method = "uncertain_si", 
+                                   config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
+                                                             min_mean_si = 1, max_mean_si = 8.4, 
+                                                             std_si = 3.4, std_std_si = 1, 
+                                                             min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000)))
+
+plot(CABA_res_parametric_si, "incid", add_imported_cases=TRUE, ) + labs(title = "CABA: Casos por dia Importados y Locales", 
+        subtitle = " COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+#ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArIncidenciaImpLocal.jpg",width=8,height=6,units="in",dpi=600)
+
+
+plot(CABA_res_parametric_si, "SI")+ theme_bw()
+plot(CABA_res_parametric_si, "R")+ theme_bw() + labs(title = "CABA Nro Reproductivo Efectivo Basado en 7 días", 
+        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaCABARefectivo7dias.jpg",width=8,height=6,units="in",dpi=600)
+
+
+
 
 # Estimación basada en 1 dia
 #
-t_start <- seq(5, length(incid$local)-1)   
-t_end <- t_start + 1            
-ar_res_parametric_si_daily <- estimate_R(incid, 
-                                   method = "uncertain_si", 
-                                   config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
-                                                             min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
-                                                             min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000,
-                                                             t_start = t_start,t_end = t_end))
-                                   )
-
-plot(ar_res_parametric_si_daily, "R") +
-  scale_y_continuous(trans='log2') +
-  geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5) + theme_bw() + labs(title = "Nro Reproductivo Efectivo Basado en 1 día", 
-        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+# t_start <- seq(5, length(incid$local)-1)   
+# t_end <- t_start + 1            
+# ar_res_parametric_si_daily <- estimate_R(incid, 
+#                                    method = "uncertain_si", 
+#                                    config = make_config(list(mean_si = 7.5, std_mean_si = 2, 
+#                                                              min_mean_si = 1, max_mean_si = 8.4, std_si = 3.4, std_std_si = 1, 
+#                                                              min_std_si = 0.5, max_std_si = 4, n1 = 1000, n2 = 1000,
+#                                                              t_start = t_start,t_end = t_end))
+#                                    )
+# 
+# plot(ar_res_parametric_si_daily, "R") +
+#   scale_y_continuous(trans='log2') +
+#   geom_hline(yintercept=1.0, linetype="solid", colour='red', size=0.5) + theme_bw() + labs(title = "Nro Reproductivo Efectivo Basado en 1 día", 
+#         subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
 ```
 
 ## Estimaciones usando modelos log-lineales
