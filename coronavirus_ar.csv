@@ -42,4 +42,5 @@ fecha,casos,casosdia,fallecido,CABA,CABAdia,recuperados,importados, contactos,co
 2020-04-15,2571,128,112,648,30,631,840,903,425,403,121,26457,20645,
 2020-04-16,2669,98,122,663,15,666,845,951,448,425,126,28650,22310,"Se modificó nuevamente la definición de ""caso sospechoso"": se baja temperatura, se suma pérdida de olfato o gusto, todo personal de salud o esencial. "
 2020-04-17,2757,88,129,677,14,685,851,997,474,435,127,30942,23796,
-2020-04-18,2839,82,132,691,14,,856,1184,496,303,,,,
+2020-04-18,2839,82,132,691,14,709,856,1184,496,303,,32712,25259,
+2020-04-19,2941,102,134,706,15,,858,1235,538,310,,,,
