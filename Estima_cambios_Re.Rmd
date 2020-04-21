@@ -330,7 +330,7 @@ test_pred_growth_median_counts %>%
 # 
 #
 set.seed(1)
-pred_fwd_days <- 0 # 5
+pred_fwd_days <- 10 # 5
 date_range <- which(get_dates(cor_incidence_obj) == cor_incidence_peak):(length(get_dates(cor_incidence_obj)) - pred_fwd_days)
 test_pred_decay <- project(cor_incidence_obj[date_range],
                             R = median(decay_R0),
