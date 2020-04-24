@@ -180,11 +180,6 @@ cor_incidence_obj <- incidence::incidence(cor_incidence$fecha)
 
 #cor_incidence_peak <- find_peak(cor_incidence_obj)
 
-plot(cor_incidence_obj) + geom_vline(xintercept = cor_incidence_peak, 
-    col = "red", lty = 2) + labs(title = "Casos diarios **locales** confirmados por laboratorio Coronavirus Argentina", 
-    subtitle = "(La linea roja indica el 1er. pico de incidencia)")
-
-
 cor_incidence_fit <- incidence::fit(cor_incidence_obj, 
     split = cor_incidence_peak)
 
@@ -192,7 +187,7 @@ cor_incidence_fit <- incidence::fit(cor_incidence_obj,
 # plot the incidence data and the model fit
 plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) + 
     labs(title = "Incidencia Observada y modelada para casos **locales** COVID-19", 
-        subtitle = "Argentina, 2020 by @larysar") + theme_bw()
+        subtitle = "Argentina, 2020 by @larysar") + theme_bw()  + geom_vline(xintercept = cor_incidence_peak,col = "red", lty = 2) 
 
 
 ```
@@ -222,17 +217,13 @@ cor_incidence_obj1 <- incidence::incidence(cor_incidence$fecha, groups=cor_incid
 
 #cor_incidence_peak <- find_peak(cor_incidence_obj1)
 
-plot(cor_incidence_obj1) + geom_vline(xintercept = cor_incidence_peak, 
-     col = "red", lty = 2) + labs(title = "Casos diarios confirmados por laboratorio Coronavirus Argentina", 
-                                  subtitle = "(La linea roja indica el 1er. pico de incidencia)") + theme_bw()
-
 cor_incidence_fit1 <- incidence::fit(cor_incidence_obj1, 
     split = cor_incidence_peak)
 
 # plot the incidence data and the model fit
 plot(cor_incidence_obj1) %>% add_incidence_fit(cor_incidence_fit1) + 
     labs(title = "Casos por Día Observados y modelados", 
-        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
+        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw() + geom_vline(xintercept = cor_incidence_peak, col = "red", lty = 2)
 ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArLogLinearModelImpLocal.jpg",width=8,height=6,units="in",dpi=600)
 
 tbl <- cbind(get_info(cor_incidence_fit1$before, "r"),get_info(cor_incidence_fit1$before, "r.conf"))
@@ -274,6 +265,8 @@ require(epitrix)
 require(distcrete)
 require(tidyr)
 mu <- 7.5 # days
+mu <- 5.8 # days
+
 sigma <- 3.4 # days
 param <- gamma_mucv2shapescale(mu, sigma / mu)
 w <- distcrete("gamma", interval = 1,
@@ -326,6 +319,7 @@ test_pred_growth_median_counts %>%
                         ")")) +
          theme(legend.position="top", legend.title = element_blank())
 
+
 #
 # 
 #
@@ -360,6 +354,8 @@ test_pred_decay_median_counts %>%
           ")")) +
      theme(legend.position="top", legend.title = element_blank())
 #ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaArProyeccionDecaimiento.jpg",width=8,height=6,units="in",dpi=600)
+
+plot(cor_incidence_obj) %>% add_projections(test_pred_growth, boxplots = FALSE) %>% add_projections(test_pred_decay, boxplots = FALSE) 
 
 ```
 
