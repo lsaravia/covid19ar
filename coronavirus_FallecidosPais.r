@@ -16,7 +16,7 @@ require(wbstats)
 
 coun <- wb_cachelist$countries
 filter(coun, grepl("Korea",country))
-pop_data <- wb(indicator = "SP.POP.TOTL", country=c("ARG","BRA","US","ESP", "ITA","CHL"),startdate = 2018, enddate = 2018) %>% select(country,value) %>% mutate(value=value/1000000,country=ifelse(country=="United States", "US", country))
+pop_data <- wb(indicator = "SP.POP.TOTL", country=c("ARG","BRA","US","ESP", "ITA","CHL"),startdate = 2018, enddate = 2018) %>% dplyr::select(country,value) %>% mutate(value=value/1000000,country=ifelse(country=="United States", "US", country))
 
 umbral <- 10
 
