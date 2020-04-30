@@ -37,7 +37,8 @@ estima_Re_from_df <- function(df,region){
                                     geom_vline(xintercept = cor_incidence_real_peak, col = "brown", lty = 2)
   )
   
-  print(plot(obj_res_parametric_si, "SI")+ theme_bw())
+  # print(plot(obj_res_parametric_si, "SI")+ theme_bw())
+  
   print(
     plot(obj_res_parametric_si, "R")+ theme_bw() + labs(title = paste(region,"Nro Reproductivo Efectivo Basado en 7 días"), 
                                                        subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw() +  

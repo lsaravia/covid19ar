@@ -25,10 +25,9 @@ Método de estimación aplicado [@Cori2013; @Thompson2019] permite la inclusión
 
 ```{r setup, include=FALSE,echo=FALSE}
 knitr::opts_chunk$set(echo = FALSE)
-require(dplyr)
-require(readr)
 require(lubridate)
-require(ggplot2)
+require(tidyverse)
+
 
 csv_fname <- "/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv"
 
@@ -120,6 +119,36 @@ ggsave("/home/leonardo/Academicos/GitProjects/covid19/coronaCABARefectivo7dias.j
 #         subtitle = "COVID-19, Argentina, 2020 by @larysar") + theme_bw()
 ```
 
+## Estimaciones del $R_t$ para provincias 
+
+
+* Datos de <https://github.com/SistemasMapache/Covid19arData>
+
+En estos datos no están informados los casos importados por eso la estimacion del $R_t$ puede ser diferente
+
+```{r Re_provincia, echo=FALSE, tidy=TRUE, message=FALSE, warning=FALSE, cache.extra = tools::md5sum(csv_fname)}
+
+source("R/functions.r")
+
+df<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA/export?format=csv&id=16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA&gid=0')
+
+dfCABA <- df %>% filter(osm_admin_level_4=="CABA")
+#incid <- dfCABA %>% dplyr::select(nue_casosconf_diff,fecha) %>% mutate(I=nue_casosconf_diff,dates=dmy(fecha)) %>% select(I,dates)
+
+esProv <- estima_Re_from_df(dfCABA,"CABA")
+
+#
+#
+#
+dfCABA <- df %>% filter(osm_admin_level_4=="Tierra del Fuego")
+esProv <- estima_Re_from_df(dfCABA,"Tierra del Fuego")
+
+
+dfCABA <- df %>% filter(osm_admin_level_4=="Buenos Aires")
+esProv <- estima_Re_from_df(dfCABA,"Buenos Aires")
+
+```
+
 ## Estimaciones usando modelos log-lineales
 
 
@@ -147,19 +176,15 @@ cor_incidence_real_peak <- find_peak(cor_incidence_obj)
 
 cor_incidence_peak <- as.Date("2020-03-30")   # Estimo que alli termina la fase exponencial inicial  
 
-plot(cor_incidence_obj) + geom_vline(xintercept = cor_incidence_peak, 
-    col = "red", lty = 2) + labs(title = "Casos diarios confirmados por laboratorio Coronavirus Argentina", 
-    subtitle = "(La linea roja indica el 1er. pico de incidencia)")
-
-
 cor_incidence_fit <- incidence::fit(cor_incidence_obj, 
     split = cor_incidence_peak)
 
 
 # plot the incidence data and the model fit
-plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) + 
-    labs(title = "Incidencia Observada y modelada para casos COVID-19", 
-        subtitle = "Argentina, 2020") + theme_bw()
+plot(cor_incidence_obj) %>% add_incidence_fit(cor_incidence_fit) +
+    geom_vline(xintercept = cor_incidence_peak, col = "red", lty = 2) +
+    labs(title = "Incidencia Observada y modelo log-linear COVID-19",
+       subtitle = "(La linea roja indica el 1er. pico de incidencia)") + theme_bw()
 
 ```
 
