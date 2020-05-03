@@ -6,13 +6,16 @@
 #
 #
 
-
-require(dplyr)
-require(readr)
+require(tidyverse)
 require(lubridate)
-require(tidyr)
-require(ggplot2)
 require(wbstats)
+
+# Archivo local
+#
+cor <- read_csv("/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv") %>% dplyr::select(fecha:comunitarios)
+cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
+#
+
 
 coun <- wb_cachelist$countries
 filter(coun, grepl("Korea",country))
@@ -53,7 +56,7 @@ cor1 <- corg %>% gather(date,N,5:ncol(corg) ) %>% arrange(country) %>% mutate(ca
 
 # Para argentina usa los datos de @minsal 
 #
-cor1 <- bind_rows( cor1, cor %>% filter(casos>umbral) %>%dplyr::select(casos,casosdia,fecha) %>% mutate(country="Argentina",dias =as.numeric( fecha - min(fecha))) %>% rename(N=casos))
+cor1 <- bind_rows( cor1, cor %>% dplyr::filter(casos>umbral) %>%dplyr::select(casos,casosdia,fecha) %>% mutate(country="Argentina",dias =as.numeric( fecha - min(fecha))) %>% rename(N=casos))
 
 require(ggplot2)
 

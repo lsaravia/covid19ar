@@ -42,7 +42,7 @@ cor <- cor %>% mutate(localesdia=casosdia - importadosdia, CABAdia=ifelse(is.na(
 
 * Un parametro importante es el 'Serial interval' (SI). El SI es el tiempo entre el inicio de los síntomas de cada caso de la enfermedad en cuestión, y el inicio de los síntomas en cualquier caso secundario que resulte de la transmisión de los casos primarios. En otras palabras, es el tiempo entre casos en la cadena (de ramificación) de transmisión de la enfermedad. El SI es, de hecho, una distribución estadística de tiempos de intervalo en serie, en lugar de un valor fijo. Esa distribución se puede simular, generalmente utilizando una distribución gamma discreta con una media y desviación estándar dada.S
 
-* Se utilizo un 'Serial interval' (SI) estimado por @Li2020 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
+* Se utilizó un 'Serial interval' (SI) estimado por @Li2020 de 7.5 days, with an SD of 3.4, pero se permitió que la media del SI variara entre 2.3 y 8.4 usando una distribucion normal truncada con una SD de 2.0, y tambien variamos la SD de la SD que variara entre 0.5 y 4.0 
 
 * Serial Interval por @He2020 media de 5.8 está dentro de los parametros simulados
 
