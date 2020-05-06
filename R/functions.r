@@ -15,9 +15,14 @@ estima_Re_from_df <- function(df,region){
   if(any(names(df)=="nue_casosconf_diff")) {
     
     cor_incidence <- df  %>% dplyr::select(nue_casosconf_diff,fecha) %>% uncount(nue_casosconf_diff)
-    cor_incidence_obj <- incidence::incidence(dmy(cor_incidence$fecha))
-  } else if(any(names(df)=="localesdia")) { 
+    if(class(cor_incidence$fecha)!="Date") {
+      cor_incidence_obj <- incidence::incidence(dmy(cor_incidence$fecha))
+    } else {
+      cor_incidence_obj <- incidence::incidence(cor_incidence$fecha)
+    }
       
+  } else if(any(names(df)=="localesdia")) { 
+    
     cor_incidence_obj <- df %>% dplyr::select(localesdia,importadosdia,fecha) %>% rename(local=localesdia,imported=importadosdia,dates=fecha)
     
   }

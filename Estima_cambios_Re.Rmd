@@ -31,7 +31,7 @@ require(tidyverse)
 
 csv_fname <- "/home/leonardo/Academicos/GitProjects/covid19/coronavirus_ar.csv"
 
-cor <- read_csv(csv_fname) %>% dplyr::select(fecha:comunitarios)
+cor <- read_csv(csv_fname) %>% dplyr::select(fecha:TDFdia)
 cor <- cor  %>% mutate(fecha=ymd(fecha), dias =as.numeric( fecha - min(fecha))) 
 cor <- cor %>% mutate(importadosdia=importados-lag(importados))
 cor$importadosdia[1] <- 1
@@ -130,6 +130,8 @@ En estos datos no están informados los casos importados por eso la estimacion d
 
 source("R/functions.r")
 
+
+
 df<-read_csv('https://docs.google.com/spreadsheets/d/16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA/export?format=csv&id=16-bnsDdmmgtSxdWbVMboIHo5FRuz76DBxsz_BbsEVWA&gid=0')
 
 dfCABA <- df %>% filter(osm_admin_level_4=="CABA")
@@ -142,6 +144,9 @@ esProv <- estima_Re_from_df(dfCABA,"CABA")
 #
 dfCABA <- df %>% filter(osm_admin_level_4=="Tierra del Fuego")
 esProv <- estima_Re_from_df(dfCABA,"Tierra del Fuego")
+
+dfCABA <- cor %>% dplyr::rename(nue_casosconf_diff=TDFdia)
+esProv <- estima_Re_from_df(dfCABA,"Tierra del Fuego, Datos Propios")
 
 
 dfCABA <- df %>% filter(osm_admin_level_4=="Buenos Aires")
